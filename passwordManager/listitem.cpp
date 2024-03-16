@@ -21,6 +21,8 @@ ListItem::ListItem(QString site, QString login_encrypted, QString password_encry
     int w = ui->iconKeys->width();
     int h = ui->iconKeys->height();
 
+    QObject::connect(this, &ListItem::enterPinSignal, qobject_cast<MainWindow*>(parent), &MainWindow::on_enterPinSignal);
+
     ui->iconKeys->setPixmap(pix.scaled(w,h, Qt::KeepAspectRatio));
 }
 

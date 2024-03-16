@@ -58,9 +58,7 @@ void MainWindow::filterListItems(const QString &searchStrings) {
         QJsonObject jsonItem = jsonArr[i].toObject();
         if ((searchStrings == "") || jsonItem["site"].toString().toLower().contains(searchStrings.toLower())) {
             QListWidgetItem *newItem = new QListWidgetItem();
-            ListItem *itemWidget = new ListItem(jsonItem["site"].toString(), jsonItem["login"].toString(), jsonItem["password"].toString());
-
-            QObject::connect(itemWidget, &ListItem::enterPinSignal, this, &MainWindow::on_enterPinSignal);
+            ListItem *itemWidget = new ListItem(jsonItem["site"].toString(), jsonItem["login"].toString(), jsonItem["password"].toString(), this);
 
             ui->listWidget->addItem(newItem);
             ui->listWidget->setItemWidget(newItem, itemWidget);
@@ -163,7 +161,7 @@ void MainWindow::on_lineEdit_2_returnPressed() {
             QClipboard *clipboard = QApplication::clipboard();
             clipboard->setText(decryptedBytes);
         } else {
-            ui->incorrectPasswordLabel->setVisible(true);
+            showIncorrectPasswordLabel();
         }
     }
     ui->lineEdit_2->setText("");
