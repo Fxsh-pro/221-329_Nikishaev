@@ -4,7 +4,6 @@
 
 #include <openssl/evp.h>
 
-
 #include <QFile>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -19,35 +18,24 @@
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
-    , ui(new Ui::MainWindow)
-{
+    , ui(new Ui::MainWindow) {
     ui->setupUi(this);
-
     QObject::connect(ui->lineEdit, &QLineEdit::textEdited, this, &MainWindow::filterListItems);
-
     ui->incorrectPasswordLabel->setVisible(false);
-
     ui->lineEdit_2->setFocus();
-
-
 }
 
-MainWindow::~MainWindow()
-{
+MainWindow::~MainWindow() {
     delete ui;
 }
 
-bool MainWindow::readJSON(unsigned char *key)
-{
+bool MainWindow::readJSON(unsigned char *key) {
     QFile jsonFile(":/res/json/cridentials_encrypted.json");
 
     if(!jsonFile.open(QIODevice::ReadOnly))
         return false;
-
     QByteArray hexEncryptedBytes = jsonFile.readAll();
-
     QByteArray encryptedBytes = QByteArray::fromHex(hexEncryptedBytes);
-
     QByteArray decryptedBytes;
 
     int ret_code = MainWindow::decryptQByteArray(encryptedBytes, decryptedBytes, key);
@@ -56,28 +44,19 @@ bool MainWindow::readJSON(unsigned char *key)
     QJsonDocument jsonDoc = QJsonDocument::fromJson(decryptedBytes, &error);
 
     qDebug() << error.errorString();
-
     qDebug() << decryptedBytes;
-
     QJsonObject jsonObj = jsonDoc.object();
 
     this->jsonArr = jsonObj["cridentials"].toArray();
-
     jsonFile.close();
-
     return !ret_code;
 }
 
-void MainWindow::filterListItems(const QString &searchStrings)
-{
+void MainWindow::filterListItems(const QString &searchStrings) {
     ui->listWidget->clear();
-
-    for (int i = 0; i != jsonArr.size(); ++i)
-    {
+    for (int i = 0; i != jsonArr.size(); ++i) {
         QJsonObject jsonItem = jsonArr[i].toObject();
-
-        if ((searchStrings == "") || jsonItem["site"].toString().toLower().contains(searchStrings.toLower()))
-        {
+        if ((searchStrings == "") || jsonItem["site"].toString().toLower().contains(searchStrings.toLower())) {
             QListWidgetItem *newItem = new QListWidgetItem();
             ListItem *itemWidget = new ListItem(jsonItem["site"].toString(), jsonItem["login"].toString(), jsonItem["password"].toString());
 
@@ -94,8 +73,7 @@ void MainWindow::filterListItems(const QString &searchStrings)
 //password  6060
 //key = 060e33205a731400c2eb92bc12cf921a4e44cf1851d216f144337dd6ec5350a7
 
-int MainWindow::decryptQByteArray(const QByteArray& encryptedBytes, QByteArray& decryptedBytes, unsigned char *key)
-{
+int MainWindow::decryptQByteArray(const QByteArray& encryptedBytes, QByteArray& decryptedBytes, unsigned char *key) {
     QByteArray iv_hex("00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f");
     QByteArray iv_ba = QByteArray::fromHex(iv_hex);
 
@@ -125,14 +103,12 @@ int MainWindow::decryptQByteArray(const QByteArray& encryptedBytes, QByteArray& 
 
     encr_len = encrypted_stream.readRawData(reinterpret_cast<char*>(encrypted_buf), BUF_LEN);
     while(encr_len > 0){
-
         if (!EVP_DecryptUpdate(ctx, decrypted_buf, &decr_len, encrypted_buf, encr_len)) {
             /* Error */
             qDebug() << "Error";
             EVP_CIPHER_CTX_free(ctx);
             return 0;
         }
-
         decryptedBuffer.write(reinterpret_cast<char*>(decrypted_buf), decr_len);
         encr_len = encrypted_stream.readRawData(reinterpret_cast<char*>(encrypted_buf), BUF_LEN);
     }
@@ -157,8 +133,7 @@ void MainWindow::on_enterPinSignal(QString toEncryptLogOrPass) {
 }
 
 
-void MainWindow::on_lineEdit_2_returnPressed()
-{
+void MainWindow::on_lineEdit_2_returnPressed() {
     QByteArray hash = QCryptographicHash::hash(ui->lineEdit_2->text().toUtf8(), QCryptographicHash::Sha256);
 
     unsigned char hash_key[32] = {0};
@@ -166,13 +141,10 @@ void MainWindow::on_lineEdit_2_returnPressed()
 
     qDebug() << "***isAuthenticated -> " << isAuthenticated;
 
-
-    if (!isAuthenticated){
-
+    if (!isAuthenticated) {
         isAuthenticated = readJSON(hash_key);
 
-        if (isAuthenticated)
-        {
+        if (isAuthenticated) {
             ui->stackedWidget->setCurrentIndex(0);
             filterListItems("");
         } else {
@@ -188,16 +160,13 @@ void MainWindow::on_lineEdit_2_returnPressed()
             int ret_code = MainWindow::decryptQByteArray(QByteArray::fromHex(toEncryptLogOrPass.toLatin1()),
                                                          decryptedBytes, hash_key);
 
-
             QClipboard *clipboard = QApplication::clipboard();
             clipboard->setText(decryptedBytes);
         } else {
             ui->incorrectPasswordLabel->setVisible(true);
         }
     }
-
     ui->lineEdit_2->setText("");
-
 }
 
 void MainWindow::showIncorrectPasswordLabel() {
@@ -208,8 +177,7 @@ void MainWindow::showIncorrectPasswordLabel() {
     });
 }
 
-void MainWindow::on_okButton_clicked()
-{
+void MainWindow::on_okButton_clicked() {
     on_lineEdit_2_returnPressed();
 }
 

@@ -24,21 +24,14 @@ ListItem::ListItem(QString site, QString login_encrypted, QString password_encry
     ui->iconKeys->setPixmap(pix.scaled(w,h, Qt::KeepAspectRatio));
 }
 
-ListItem::~ListItem()
-{
+ListItem::~ListItem() {
     delete ui;
 }
 
-
-
-void ListItem::on_copyLoginButton_clicked()
-{
+void ListItem::on_copyLoginButton_clicked() {
     emit enterPinSignal(log_encr);
 }
 
-
-void ListItem::on_copyPasswordButton_clicked()
-{
+void ListItem::on_copyPasswordButton_clicked() {
     emit enterPinSignal(pass_encr);
 }
-
